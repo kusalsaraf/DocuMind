@@ -1,7 +1,8 @@
 import axios from 'axios'
 import type { ChatResponse, ChatSession, FileRecord, MessageResponse } from '../types'
 
-const api = axios.create({ baseURL: 'http://localhost:8000' })
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const api = axios.create({ baseURL: API_URL })
 
 // --- Files ---
 export const uploadFile = (file: File) => {
@@ -15,7 +16,7 @@ export const getFiles = () => api.get<FileRecord[]>('/api/files')
 export const deleteFile = (id: string) => api.delete(`/api/files/${id}`)
 
 export const getFileViewUrl = (id: string) =>
-  `http://localhost:8000/api/files/${id}/view`
+  `${API_URL}/api/files/${id}/view`
 
 export const processFile = (id: string) =>
   api.post<{ file_id: string; status: string; message: string }>(`/api/process/${id}`)
