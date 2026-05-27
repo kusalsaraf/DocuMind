@@ -5,7 +5,7 @@ from llama_index.core import Settings, StorageContext, VectorStoreIndex
 from llama_index.core import Document
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.vector_stores.postgres import PGVectorStore
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.gemini import GeminiEmbedding
 
 from core.config import settings
 
@@ -16,14 +16,17 @@ TABLE_NAME = "document_embeddings"
 
 
 def configure_llama_settings() -> None:
-    logger.info("rag: loading HuggingFace embedding model BAAI/bge-base-en-v1.5")
+    logger.info("rag: configuring Gemini embedding model text-embedding-004")
     try:
-        Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
+        Settings.embed_model = GeminiEmbedding(
+            model_name="models/text-embedding-004",
+            api_key=settings.gemini_api_key,
+        )
         Settings.node_parser = SentenceSplitter(chunk_size=512, chunk_overlap=50)
         Settings.llm = None
         logger.info("rag: embedding model ready")
     except Exception as exc:
-        logger.error("rag: failed to load embedding model — %s", exc)
+        logger.error("rag: failed to configure embedding model — %s", exc)
         raise
 
 
