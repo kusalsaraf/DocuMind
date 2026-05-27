@@ -7,4 +7,7 @@ export default defineConfig({
   server: {
     allowedHosts: ['strength-geriatric-dedicate.ngrok-free.dev'],
   },
+  build: {
+    cssMinify: false,
+  },
 })
