@@ -2,7 +2,7 @@
 
 A document Q&A chatbot built with RAG (Retrieval-Augmented Generation). Upload PDFs or Excel files, index them, and ask questions in a persistent chat interface grounded in your documents.
 
-**Stack:** FastAPI · LlamaIndex · HuggingFace Embeddings (local, free) · Gemini 2.5 Flash · PostgreSQL + pgvector · React + Vite + Tailwind
+**Stack:** FastAPI · LlamaIndex · Gemini Embeddings + Gemini 2.5 Flash · PostgreSQL + pgvector · React + Vite + Tailwind
 
 ---
 
@@ -94,7 +94,7 @@ source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-> The first install downloads the HuggingFace embedding model (`BAAI/bge-base-en-v1.5`, ~435 MB). This happens once and is cached locally — no internet needed after that.
+> Embeddings use the Gemini `text-embedding-004` API — no large model download needed.
 
 ### Configure environment variables
 
@@ -149,7 +149,7 @@ UI runs at **http://localhost:5173** (or `5174` if 5173 is in use).
 ### Step 2 — Index
 - Click **Process** next to each file, or **Process All**
 - Wait for the **Indexed ✓** status — this parses, chunks, embeds, and stores vectors in PostgreSQL
-- Indexing uses a local HuggingFace model (no API key needed, runs on CPU)
+- Indexing uses the Gemini embedding API (requires the same Gemini API key)
 
 ### Step 3 — Chat
 - Click **New Chat** in the sidebar to start a session
@@ -176,7 +176,7 @@ rag/
 │   │   ├── config.py            # Pydantic settings (reads .env)
 │   │   ├── database.py          # SQLAlchemy models (files, sessions, messages)
 │   │   ├── logging_config.py    # Rotating file + console logging
-│   │   └── rag.py               # LlamaIndex + HuggingFace embedding config
+│   │   └── rag.py               # LlamaIndex + Gemini embedding config
 │   ├── models/
 │   │   └── schemas.py           # Pydantic request/response schemas
 │   ├── logs/                    # Auto-created on first run
@@ -215,7 +215,7 @@ The backend creates these tables automatically on startup — no manual SQL need
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `GEMINI_API_KEY` | Yes | Google Gemini API key for generating answers |
+| `GEMINI_API_KEY` | Yes | Google Gemini API key for embeddings and generating answers |
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 
 ---
@@ -240,9 +240,6 @@ psql ragdb -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
 ### `role "postgres" does not exist`
 Homebrew PostgreSQL uses your Mac username, not `postgres`. Update `DATABASE_URL` in `.env` to use `your_mac_username` (run `whoami` to find it).
-
-### HuggingFace model download is slow
-The embedding model (`BAAI/bge-base-en-v1.5`, ~435 MB) downloads once on first backend startup. Subsequent starts use the local cache. Requires internet on first run only.
 
 ### Frontend blocked by ngrok / tunnel
 If accessing via a tunnel (ngrok, etc.), add the host to `frontend/vite.config.ts` under `server.allowedHosts`, and add the origin URL to `allow_origins` in `backend/main.py`.
