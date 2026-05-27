@@ -8,6 +8,6 @@ export default defineConfig({
     allowedHosts: ['strength-geriatric-dedicate.ngrok-free.dev'],
   },
   build: {
-    cssMinify: 'esbuild',
+    cssMinify: false,
   },
 })
