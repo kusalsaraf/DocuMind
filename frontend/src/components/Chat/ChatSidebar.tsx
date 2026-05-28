@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { Plus, MessageSquare } from 'lucide-react'
 import {
-  createSession,
   deleteSession,
   getSessionMessages,
   getSessions,
@@ -15,11 +14,12 @@ export default function ChatSidebar() {
     sessions,
     activeSessionId,
     setSessions,
-    addSession,
     removeSession,
     setActiveSession,
+    clearActiveSession,
     setMessages,
-    clearMessages,
+    pendingNewChat,
+    setPendingNewChat,
   } = useAppStore()
 
   useEffect(() => {
@@ -28,17 +28,15 @@ export default function ChatSidebar() {
       .catch(() => {})
   }, [setSessions])
 
-  const handleNewChat = async () => {
-    try {
-      const res = await createSession()
-      addSession(res.data)
-      setActiveSession(res.data.id)
-      clearMessages()
-    } catch {}
+  const handleNewChat = () => {
+    if (pendingNewChat) return
+    setPendingNewChat(true)
+    clearActiveSession()
   }
 
   const handleSelectSession = async (id: string) => {
-    if (id === activeSessionId) return
+    if (id === activeSessionId && !pendingNewChat) return
+    setPendingNewChat(false)
     setActiveSession(id)
     try {
       const res = await getSessionMessages(id)

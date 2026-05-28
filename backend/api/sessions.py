@@ -28,10 +28,12 @@ def create_session(db: Session = Depends(get_db)):
 
 @router.get("/sessions", response_model=list[SessionResponse])
 def list_sessions(db: Session = Depends(get_db)):
-    logger.info("list_sessions: fetching all sessions")
+    logger.info("list_sessions: fetching sessions with at least one message")
     try:
+        from sqlalchemy import exists
         sessions = (
             db.query(ChatSession)
+            .filter(exists().where(ChatMessage.session_id == ChatSession.id))
             .order_by(ChatSession.updated_at.desc())
             .all()
         )

@@ -12,14 +12,22 @@ export type Tab = 'upload' | 'knowledge-base' | 'chat'
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('upload')
   const setFiles = useAppStore((s) => s.setFiles)
+  const { activeSessionId, pendingNewChat, setPendingNewChat } = useAppStore()
 
   useEffect(() => {
     getFiles().then((res) => setFiles(res.data)).catch(() => {})
   }, [setFiles])
 
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab)
+    if (tab === 'chat' && !activeSessionId && !pendingNewChat) {
+      setPendingNewChat(true)
+    }
+  }
+
   return (
     <div className="h-screen overflow-hidden bg-gray-50 flex flex-col">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+      <Header activeTab={activeTab} onTabChange={handleTabChange} />
 
       {activeTab === 'chat' ? (
         <div className="flex flex-1 overflow-hidden">

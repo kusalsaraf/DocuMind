@@ -17,6 +17,11 @@ interface AppStore {
   removeSession: (id: string) => void
   updateSessionTitle: (id: string, title: string) => void
   setActiveSession: (id: string) => void
+  clearActiveSession: () => void
+
+  // Pending new chat (session created lazily on first message)
+  pendingNewChat: boolean
+  setPendingNewChat: (v: boolean) => void
 
   // Messages (active session only)
   messages: Message[]
@@ -52,6 +57,11 @@ export const useAppStore = create<AppStore>((set) => ({
       sessions: s.sessions.map((sess) => (sess.id === id ? { ...sess, title } : sess)),
     })),
   setActiveSession: (id) => set({ activeSessionId: id, messages: [] }),
+  clearActiveSession: () => set({ activeSessionId: null, messages: [] }),
+
+  // Pending new chat
+  pendingNewChat: false,
+  setPendingNewChat: (v) => set({ pendingNewChat: v }),
 
   // Messages
   messages: [],
