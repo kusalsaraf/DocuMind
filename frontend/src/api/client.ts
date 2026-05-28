@@ -36,7 +36,7 @@ export const getSessions = () =>
   api.get<ChatSession[]>('/api/sessions')
 
 export const deleteSession = (id: string) =>
-  api.delete(`/api/sessions/${id}`)
+  api.delete<void>(`/api/sessions/${id}`)
 
 export const getSessionMessages = (id: string) =>
   api.get<MessageResponse[]>(`/api/sessions/${id}/messages`)

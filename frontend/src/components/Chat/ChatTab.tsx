@@ -1,13 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { SendHorizontal, MessageSquare, BookOpen, ArrowRight } from 'lucide-react'
-import { sendChat, updateSessionTitle } from '../../api/client'
+import { createSession, deleteSession, sendChat, updateSessionTitle } from '../../api/client'
 import { useAppStore } from '../../store/useAppStore'
 import MessageList from './MessageList'
 import type { Message } from '../../types'
 
 export default function ChatTab() {
-  const { messages, addMessage, activeSessionId, sessions, updateSessionTitle: updateTitleInStore, files } =
-    useAppStore()
+  const {
+    messages,
+    addMessage,
+    activeSessionId,
+    sessions,
+    addSession,
+    removeSession,
+    setActiveSession,
+    updateSessionTitle: updateTitleInStore,
+    files,
+    pendingNewChat,
+    setPendingNewChat,
+  } = useAppStore()
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -21,7 +32,24 @@ export default function ChatTab() {
 
   const handleSend = async () => {
     const question = input.trim()
-    if (!question || loading || !activeSessionId) return
+    if (!question || loading) return
+
+    let sessionId = activeSessionId
+
+    // Lazy session creation: create the backend session on first message
+    if (pendingNewChat) {
+      try {
+        const res = await createSession()
+        addSession(res.data)
+        setActiveSession(res.data.id)
+        setPendingNewChat(false)
+        sessionId = res.data.id
+      } catch {
+        return
+      }
+    }
+
+    if (!sessionId) return
 
     const isFirstMessage = messages.length === 0
 
@@ -36,7 +64,7 @@ export default function ChatTab() {
     setLoading(true)
 
     try {
-      const res = await sendChat(activeSessionId, question)
+      const res = await sendChat(sessionId, question)
       const assistantMsg: Message = {
         id: res.data.message_id,
         role: 'assistant',
@@ -48,10 +76,17 @@ export default function ChatTab() {
 
       if (isFirstMessage) {
         const title = question.slice(0, 50)
-        updateTitleInStore(activeSessionId, title)
-        updateSessionTitle(activeSessionId, title).catch(() => {})
+        updateTitleInStore(sessionId, title)
+        updateSessionTitle(sessionId, title).catch(() => {})
       }
     } catch {
+      // If this was the very first message on a newly created session, delete
+      // the empty session so it doesn't linger in the sidebar.
+      if (isFirstMessage && sessionId) {
+        deleteSession(sessionId).catch(() => {})
+        removeSession(sessionId)
+        setPendingNewChat(true)
+      }
       addMessage({
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -71,8 +106,8 @@ export default function ChatTab() {
     }
   }
 
-  // No session selected
-  if (!activeSessionId) {
+  // No session selected and no pending new chat
+  if (!activeSessionId && !pendingNewChat) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-gray-50">
         <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center">
