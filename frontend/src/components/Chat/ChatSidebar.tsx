@@ -14,12 +14,10 @@ export default function ChatSidebar() {
     sessions,
     activeSessionId,
     setSessions,
-    addSession,
     removeSession,
     setActiveSession,
     clearActiveSession,
     setMessages,
-    clearMessages,
     pendingNewChat,
     setPendingNewChat,
   } = useAppStore()
